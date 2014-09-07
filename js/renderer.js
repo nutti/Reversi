@@ -8,6 +8,7 @@ var NODE_ID_BLACK = 2;
 var nodes;
 var targetID;
 var curID = NODE_ID_WHITE;
+var reversableNodesIndices = new Array();
 
 var Coord2D = (function(){
     var obj = function(){};
@@ -55,7 +56,7 @@ function CoordToIdx( x, y )
     return y * MAX_X + x;
 }
 
-function reverseNode( nx, ny, id )
+function checkReversableNodes( nx, ny, id )
 {
     var reversableID;
 
@@ -83,10 +84,11 @@ function reverseNode( nx, ny, id )
 	}
 	// reverse ID
 	if( reverse ){
-	    for( var i = x; i < nx; ++i ){
-		nodes[ CoordToIdx( i, ny ) ]._id = id;
+	    for( var i = x + 1; i < nx; ++i ){
+		reversableNodeIndices.push( CoordToIdx( i, ny ) );
+//		nodes[ CoordToIdx( i, ny ) ]._id = id;
 	    }
-	    console.debug( "Reverse X left:" + x + "-" + nx );
+	    console.debug( "Reverse X left:" + (x+1) + "-" + nx );
 	}
     }
 
@@ -104,10 +106,11 @@ function reverseNode( nx, ny, id )
 	    }
 	}
 	if( reverse ){
-	    for( var i = x; i > nx; --i ){
-		nodes[ CoordToIdx( i, ny ) ]._id = id;
+	    for( var i = x - 1; i > nx; --i ){
+		reversableNodeIndices.push( CoordToIdx( i, ny ) );
+//		nodes[ CoordToIdx( i, ny ) ]._id = id;
 	    }
-	    console.debug( "Reverse X right:" + x + "-" + nx );
+	    console.debug( "Reverse X right:" + (x-1) + "-" + nx );
 	}
     }
 
@@ -125,10 +128,11 @@ function reverseNode( nx, ny, id )
 	    }
 	}
 	if( reverse ){
-	    for( var i = y; i > ny; --i ){
-		nodes[ CoordToIdx( nx, i ) ]._id = id;
+	    for( var i = y - 1; i > ny; --i ){
+		reversableNodeIndices.push( CoordToIdx( nx, i ) );
+//		nodes[ CoordToIdx( nx, i ) ]._id = id;
 	    }
-	    console.debug( "Reverse Y up:" + y + "-" + ny );
+	    console.debug( "Reverse Y up:" + (y-1) + "-" + ny );
 	}
     }
 
@@ -146,12 +150,121 @@ function reverseNode( nx, ny, id )
 	    }
 	}
 	if( reverse ){
-	    for( var i = y; i < ny; ++i ){
-		nodes[ CoordToIdx( nx, i ) ]._id = id;
+	    for( var i = y + 1; i < ny; ++i ){
+		reversableNodeIndices.push( CoordToIdx( nx, i ) );
+//		nodes[ CoordToIdx( nx, i ) ]._id = id;
 	    }
-	    console.debug( "Reverse Y down:" + y + "-" + ny );
+	    console.debug( "Reverse Y down:" + (y+1) + "-" + ny );
 	}
     }
+
+    // left+down
+    if( nx > 0 && ny > 0 && nodes[ CoordToIdx( nx - 1, ny - 1 ) ]._id == reversableID ){
+	var x;
+	var y;
+	var reverse = false;
+	for( x = nx - 1, y = ny - 1; x >= 0, y >= 0; --x, --y ){
+	    if( nodes[ CoordToIdx( x, y ) ]._id == NODE_ID_NONE ){
+		break;
+	    }
+	    if( nodes[ CoordToIdx( x, y ) ]._id == id ){
+		reverse = true;
+		break;
+	    }
+	}
+	if( reverse ){
+	    var i = x + 1;
+	    var j = y + 1;
+	    for( ; i < nx, j < ny; ++i, ++j ){
+		reversableNodeIndices.push( CoordToIdx( i, j ) );
+	    }
+	    console.debug( "Reverse X-Y left-down:" + (x+1) + "-" + (y+1) );
+	}
+    }
+
+    // left+up
+    if( nx > 0 && ny < MAX_Y - 1 && nodes[ CoordToIdx( nx - 1, ny + 1 ) ]._id == reversableID ){
+	var x;
+	var y;
+	var reverse = false;
+	for( x = nx - 1, y = ny + 1; x >= 0, y < MAX_Y; --x, ++y ){
+	    if( nodes[ CoordToIdx( x, y ) ]._id == NODE_ID_NONE ){
+		break;
+	    }
+	    if( nodes[ CoordToIdx( x, y ) ]._id == id ){
+		reverse = true;
+		break;
+	    }
+	}
+	if( reverse ){
+	    var i = x + 1;
+	    var j = y - 1;
+	    for( ; i < nx, j > ny; ++i, --j ){
+		reversableNodeIndices.push( CoordToIdx( i, j ) );
+	    }
+	    console.debug( "Reverse X-Y left-up:" + (x+1) + "-" + (y+1) );
+	}
+    }
+
+    // right+down
+    if( nx < MAX_X - 1 && ny > 0 && nodes[ CoordToIdx( nx + 1, ny - 1 ) ]._id == reversableID ){
+	var x;
+	var y;
+	var reverse = false;
+	for( x = nx + 1, y = ny - 1; x < MAX_X, y >= 0; ++x, --y ){
+	    if( nodes[ CoordToIdx( x, y ) ]._id == NODE_ID_NONE ){
+		break;
+	    }
+	    if( nodes[ CoordToIdx( x, y ) ]._id == id ){
+		reverse = true;
+		break;
+	    }
+	}
+	if( reverse ){
+	    var i = x - 1;
+	    var j = y + 1;
+	    for( ; i > nx, j < ny; --i, ++j ){
+		reversableNodeIndices.push( CoordToIdx( i, j ) );
+	    }
+	    console.debug( "Reverse X-Y right-down:" + (x+1) + "-" + (y+1) );
+	}
+    }
+
+    // right+up
+    if( nx < MAX_X - 1 && ny < MAX_Y - 1 && nodes[ CoordToIdx( nx + 1, ny + 1 ) ]._id == reversableID ){
+	var x;
+	var y;
+	var reverse = false;
+	for( x = nx + 1, y = ny + 1; x < MAX_X, y < MAX_Y; ++x, ++y ){
+	    if( nodes[ CoordToIdx( x, y ) ]._id == NODE_ID_NONE ){
+		break;
+	    }
+	    if( nodes[ CoordToIdx( x, y ) ]._id == id ){
+		reverse = true;
+		break;
+	    }
+	}
+	if( reverse ){
+	    var i = x - 1;
+	    var j = y - 1;
+	    for( ; i > nx, j > ny; --i, --j ){
+		reversableNodeIndices.push( CoordToIdx( i, j ) );
+	    }
+	    console.debug( "Reverse X-Y right-up:" + (x+1) + "-" + (y+1) );
+	}
+    }
+}
+
+function reverseNodes()
+{
+    reversableNodeIndices.forEach( (function( elm, idx, array ){
+	if( nodes[ elm ]._id == NODE_ID_BLACK ){
+	    nodes[ elm ]._id = NODE_ID_WHITE;
+	}
+	else if( nodes[ elm ]._id == NODE_ID_WHITE ){
+	    nodes[ elm ]._id = NODE_ID_BLACK;
+	}
+    }));
 }
 
 function settable( x, y, id )
@@ -162,6 +275,13 @@ function settable( x, y, id )
     }
     if( nodes[ CoordToIdx( x, y ) ]._id != NODE_ID_NONE ){
 	console.debug( "Node already exists: (x,y)=(" + x + "," + y + ")" );
+	return false;
+    }
+    
+    reversableNodeIndices = new Array();
+    checkReversableNodes( x, y, id );
+    if( reversableNodeIndices.length == 0 ){
+	console.debug( "Not reversable position: (x,y)=(" + x + "," + y + ")" );
 	return false;
     }
 
@@ -175,14 +295,21 @@ function setNode( x, y, id )
     }
 
     nodes[ CoordToIdx( x, y ) ]._id = id;
-    reverseNode( x, y, id );
+    reverseNodes();
+
+    if( curID == NODE_ID_WHITE ){
+	curID = NODE_ID_BLACK;
+    }
+    else if( curID == NODE_ID_BLACK ){
+	curID = NODE_ID_WHITE;
+    }
 }
 
 function init( id )
 {
     targetID = id;
 
-    OFFSET.set( 20.0, 20.0 );
+    OFFSET.set( 50.0, 50.0 );
     SIZE.set( 20.0, 20.0 );
 
     nodes = new Array();
@@ -218,8 +345,8 @@ function init( id )
 
 function pixelToCoord( pv, c )
 {
-    c._x = Math.floor( ( pv._x + SIZE._x / 2 ) / OFFSET._x );
-    c._y = Math.floor( ( pv._y + SIZE._y / 2 )/ OFFSET._y );
+    c._x = Math.floor( ( pv._x + SIZE._x * 1.5 - OFFSET._x ) / SIZE._x );
+    c._y = Math.floor( ( pv._y + SIZE._y * 1.5 - OFFSET._y ) / SIZE._y );
 }
 
 function onMouseClicked( ev )
@@ -232,16 +359,10 @@ function onMouseClicked( ev )
     mv._x = ev.clientX - r.left;
     mv._y = ev.clientY - r.top;
     pixelToCoord( mv, c );
+
     setNode( c._x - 1, c._y - 1, curID );
 
     draw();
-
-    if( curID == NODE_ID_WHITE ){
-	curID = NODE_ID_BLACK;
-    }
-    else if( curID == NODE_ID_BLACK ){
-	curID = NODE_ID_WHITE;
-    }
 }
 
 function draw()
@@ -258,7 +379,33 @@ function draw()
     context.fillStyle = "rgb(255,255,255)";
     context.fill();
 
-    for( var y = 0; y < MAX_Y; ++y ){
+    drawGrid( context );
+    drawStatus( context );
+    drawNodes( context );
+ 
+}
+
+function drawGrid( context )
+{
+    for( var i = 0; i < MAX_X + 1; ++i ){
+	drawLine( context,
+		  OFFSET._x - SIZE._x / 2 + i * SIZE._x,
+		  OFFSET._y - SIZE._y / 2,
+		  OFFSET._x - SIZE._x / 2 + i * SIZE._x,
+		  OFFSET._y - SIZE._y / 2 + MAX_Y * SIZE._y );
+    }
+    for( var i = 0; i < MAX_Y + 1; ++i ){
+	drawLine( context,
+		  OFFSET._x - SIZE._x / 2,
+		  OFFSET._y - SIZE._y / 2 + i * SIZE._y,
+		  OFFSET._x - SIZE._x / 2 + MAX_X * SIZE._x,
+		  OFFSET._y - SIZE._y / 2 + i * SIZE._y );	
+    }
+}
+
+function drawNodes( context )
+{
+   for( var y = 0; y < MAX_Y; ++y ){
 	for( var x = 0; x < MAX_X; ++x ){
 	    switch( nodes[ CoordToIdx( x, y ) ]._id ){
 	    case NODE_ID_WHITE:
@@ -280,6 +427,42 @@ function draw()
 	    }	
 	}
     }
+}
+
+function getNodeTotalWithID( id )
+{
+    var num = 0;
+
+    nodes.forEach( (function( elm, idx, array ){
+	if( elm._id == id ){
+	    ++num;
+	}
+    }) );
+
+    return num;
+}
+
+function drawStatus( context )
+{
+    context.fillStyle = "black";
+
+    if( curID == NODE_ID_WHITE ){
+	context.fillText( "Turn : White", 10, 10 );
+    }
+    else if( curID == NODE_ID_BLACK ){
+	context.fillText( "Turn : Black", 10, 10 );
+    }
+
+    var white = getNodeTotalWithID( NODE_ID_WHITE );
+    var black = getNodeTotalWithID( NODE_ID_BLACK );
+    var none = getNodeTotalWithID( NODE_ID_NONE );
+    var total = white + black + none;
+
+    context.fillText( "Num : " + total +
+		      " (W:" + white +
+		      ", B:" + black +
+		      ", N:" + none + ")",
+		      10, 20 );
 }
 
 function drawLine( context, x1, y1, x2, y2 )
