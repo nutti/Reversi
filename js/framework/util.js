@@ -3,10 +3,6 @@ var Coord2D = (function(){
     obj.prototype = {
 	_x : 0,
 	_y : 0,
-	initialize : function( x, y ){
-	    this._x = x;
-	    this._y = y;
-	},
 	set : function( x, y ){
 	    this._x = x;
 	    this._y = y;

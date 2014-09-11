@@ -1,4 +1,3 @@
-
 var OFFSET = new Coord2D();
 var RADIUS = 8.0;
 var SIZE = new Coord2D();

@@ -1,4 +1,4 @@
-function aa( curID )
+function aa( id )
 {
     var x;
     var y;
@@ -11,4 +11,6 @@ function aa( curID )
     }while( !settable( x, y, id ) );
 
     setNode( x, y, id );
+
+    console.debug( "ok " );
 }
