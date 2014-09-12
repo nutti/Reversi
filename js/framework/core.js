@@ -4,11 +4,16 @@ var curID = NODE_ID_WHITE;
 var reversableNodesIndices = new Array();
 
 var algorithmFn = aiRandom;
-
+var myAlgorithmFn = null;
 
 function setAlgorithm( fn )
 {
     algorithmFn = fn;
+}
+
+function setMyAlgorithm( fn )
+{
+    myAlgorithmFn = fn;
 }
 
 function checkReversableNodes( nx, ny, id )

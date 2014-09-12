@@ -36,7 +36,8 @@ function init( id )
     }
 
     canvas.addEventListener( 'click', onMouseClicked );
-    setAlgorithm( aa );
+    setAlgorithm( randomByWeight );
+    setMyAlgorithm( randomByNone );
 
     draw();
 }
@@ -59,10 +60,8 @@ function onMouseClicked( ev )
     pixelToCoord( mv, c );
 
     if( existSetableNode( curID ) ){
-	if( !settable( c._x - 1, c._y - 1, curID ) ){
-	    return;
-	}
-	setNode( c._x - 1, c._y - 1, curID );
+	myAlgorithmFn( c._x - 1, c._y - 1, curID );
+	//setNode( c._x - 1, c._y - 1, curID );
     }
     else{
 	console.debug( "not exist!! w" );
@@ -70,7 +69,7 @@ function onMouseClicked( ev )
     }
 
     if( existSetableNode( curID ) ){
-	algorithmFn( curID );
+	algorithmFn( c._x - 1, c._y - 1, curID );
     }
     else{
 	console.debug( "not exist!! b" );
