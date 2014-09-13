@@ -1,13 +1,18 @@
-function inputFromPlayer( ix, iy, id )
+function inputFromPlayer( nodes, ix, iy, id )
 {
-    if( !settable( ix, iy, id ) ){
-	return;
+    var result;
+    
+    result = cannotSet( nodes, ix, iy, id );
+    if( result ){
+	return result;
     }
 
-    setNode( ix, iy, id );
+    setNode( nodes, ix, iy, id );
+
+    return result;
 }
 
-function randomByNone( ix, iy, id )
+function randomByNone( nodes, ix, iy, id )
 {
     var x;
     var y;
@@ -17,14 +22,14 @@ function randomByNone( ix, iy, id )
 	y = Math.floor( Math.random() * MAX_Y );
 	x = ( x == MAX_X ) ? MAX_X - 1 : x;
 	y = ( y == MAX_Y ) ? MAX_Y - 1 : y;
-    }while( !settable( x, y, id ) );
+    }while( cannotSet( nodes, x, y, id ) );
 
-    setNode( x, y, id );
+    setNode( nodes, x, y, id );
 
-    console.debug( "ok " );
+    return SET_NODE_SUCCEEDED;
 }
 
-function randomByWeight( ix, iy, id )
+function randomByWeight( nodes, ix, iy, id )
 {
     var map = [ 120, -20, 20, 5, 5, 20, -20, 120,
 		-20, -40, -5, -5, -5, -5, -40, -20,
@@ -39,7 +44,7 @@ function randomByWeight( ix, iy, id )
 
     for( var x = 0; x < MAX_X; ++x ){
 	for( var y = 0; y < MAX_Y; ++y ){
-	    if( settable( x, y, id ) ){
+	    if( !cannotSet( nodes, x, y, id ) ){
 		if( mx == -1 && my == -1 ){
 		    mx = x;
 		    my = y;
@@ -53,9 +58,9 @@ function randomByWeight( ix, iy, id )
 	}
     }
 
-    setNode( mx, my, id );
+    setNode( nodes, mx, my, id );
 
-    console.debug( "hh" );
+    return SET_NODE_SUCCEEDED;
 }
 
 

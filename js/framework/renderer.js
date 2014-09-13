@@ -2,15 +2,8 @@ var OFFSET = new Coord2D();
 var RADIUS = 8.0;
 var SIZE = new Coord2D();
 
-function init( id )
+function initNodes( nodes )
 {
-    targetID = id;
-
-    OFFSET.set( 50.0, 50.0 );
-    SIZE.set( 20.0, 20.0 );
-
-    nodes = new Array();
-
     for( var y = 0; y < MAX_Y; ++y ){
 	for( var x = 0; x < MAX_X; ++x ){
 	    var n = new Node();
@@ -33,11 +26,23 @@ function init( id )
 	    }
 	    nodes.push( n );
 	}
-    }
+    }    
+}
+
+function init( id )
+{
+    targetID = id;
+
+    OFFSET.set( 50.0, 50.0 );
+    SIZE.set( 20.0, 20.0 );
+
+    gameNodes = new Array();
+    initNodes( gameNodes );
 
     canvas.addEventListener( 'click', onMouseClicked );
-    setAlgorithm( randomByWeight );
+    setAlgorithm( aiMaxEval );
     setMyAlgorithm( randomByNone );
+//    setMyAlgorithm( inputFromPlayer );
 
     draw();
 }
@@ -59,20 +64,27 @@ function onMouseClicked( ev )
     mv._y = ev.clientY - r.top;
     pixelToCoord( mv, c );
 
-    if( existSetableNode( curID ) ){
-	myAlgorithmFn( c._x - 1, c._y - 1, curID );
-	//setNode( c._x - 1, c._y - 1, curID );
+    if( existSetableNode( gameNodes, curID ) ){
+	var result;
+	result = myAlgorithmFn( gameNodes, c._x - 1, c._y - 1, curID );
+	if( result != SET_NODE_SUCCEEDED ){
+	    return;
+	}
+	flipCurID();
     }
     else{
-	console.debug( "not exist!! w" );
 	flipCurID();
     }
 
-    if( existSetableNode( curID ) ){
-	algorithmFn( c._x - 1, c._y - 1, curID );
+    if( existSetableNode( gameNodes, curID ) ){
+	var result;
+	result = algorithmFn( gameNodes, c._x - 1, c._y - 1, curID );
+	if( result != SET_NODE_SUCCEEDED ){
+	    return;
+	}
+	flipCurID();
     }
     else{
-	console.debug( "not exist!! b" );
 	flipCurID();
     }
 
@@ -121,7 +133,7 @@ function drawNodes( context )
 {
    for( var y = 0; y < MAX_Y; ++y ){
 	for( var x = 0; x < MAX_X; ++x ){
-	    switch( nodes[ CoordToIdx( x, y ) ]._id ){
+	    switch( gameNodes[ CoordToIdx( x, y ) ]._id ){
 	    case NODE_ID_WHITE:
 		drawWhiteCircle( context,
 				 OFFSET._x + SIZE._x * x,
@@ -143,7 +155,7 @@ function drawNodes( context )
     }
 }
 
-function getNodeTotalWithID( id )
+function getNodeTotalWithID( nodes, id )
 {
     var num = 0;
 
@@ -167,9 +179,9 @@ function drawStatus( context )
 	context.fillText( "Turn : Black", 10, 10 );
     }
 
-    var white = getNodeTotalWithID( NODE_ID_WHITE );
-    var black = getNodeTotalWithID( NODE_ID_BLACK );
-    var none = getNodeTotalWithID( NODE_ID_NONE );
+    var white = getNodeTotalWithID( gameNodes, NODE_ID_WHITE );
+    var black = getNodeTotalWithID( gameNodes, NODE_ID_BLACK );
+    var none = getNodeTotalWithID( gameNodes, NODE_ID_NONE );
     var total = white + black + none;
 
     context.fillText( "Num : " + total +
@@ -177,6 +189,11 @@ function drawStatus( context )
 		      ", B:" + black +
 		      ", N:" + none + ")",
 		      10, 20 );
+
+
+    context.fillText( "Eval : W-" + evalState( gameNodes, NODE_ID_WHITE ) +
+		      " B-" + evalState( gameNodes, NODE_ID_BLACK ),
+		      400, 20 );
 }
 
 function drawLine( context, x1, y1, x2, y2 )

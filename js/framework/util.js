@@ -40,3 +40,7 @@ function CoordToIdx( x, y )
     return y * MAX_X + x;
 }
 
+function copyNode( srcNode, destNode )
+{
+    destNode._id = srcNode._id;
+}
