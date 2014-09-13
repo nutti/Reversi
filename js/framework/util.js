@@ -31,6 +31,16 @@ var Node = (function(){
     return obj;
 })();
 
+var TreeNode = (function(){
+    var obj = function(){};
+    obj.prototype = {
+	_child : null,
+	_elms : null,
+	_coord : null,
+    };
+    return obj;
+})();
+
 function CoordToIdx( x, y )
 {
     if( y * MAX_X + x >= MAX_Y * MAX_X ){

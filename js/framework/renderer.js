@@ -40,7 +40,8 @@ function init( id )
     initNodes( gameNodes );
 
     canvas.addEventListener( 'click', onMouseClicked );
-    setAlgorithm( aiMaxEval );
+//    setAlgorithm( aiMaxEval );
+    setAlgorithm( aiMinimax );
     setMyAlgorithm( randomByNone );
 //    setMyAlgorithm( inputFromPlayer );
 

@@ -65,3 +65,63 @@ function aiMaxEval( nodes, ix, iy, id )
     return SET_NODE_SUCCEEDED;
 }
 
+function doMinimax( tnode, id, depth, firstID, result )
+{
+    if( depth == 0 ){
+	return evalState( tnode._elm );
+    }
+
+    tnode._child = new Array();
+
+    for( var x = 0; x < MAX_X; ++x ){
+	for( var y = 0; y < MAX_Y; ++y ){
+	    if( !cannotSet( tnode._elm, x, y, id ) ){
+		var newChild = new TreeNode();
+		var copied = new Array();
+		var coord = new Coord2D();
+		copyNodes( tnode._elm, copied );
+		setNode( copied, x, y, id );
+		newChild._elm = copied;
+		coord.set( x, y );
+		newChild._coord = coord;
+		tnode._child.push( newChild );
+	    }
+	}
+    }
+    
+    var best = -99999;
+    for( var i = 0; i < tnode._child.length; ++i ){
+	var nextID = ( id == NODE_ID_WHITE ) ? NODE_ID_BLACK : NODE_ID_WHITE;
+	var val = doMinimax( tnode._child[ i ], nextID, depth - 1, firstID, result );
+	if( id == firstID && best < val ){
+	    result.set( tnode._child[ i ]._coord._x, tnode._child[ i ]._coord._y );
+	    best = val;
+	}
+	if( id != firstID && best < -val ){
+	    result.set( tnode._child[ i ]._coord._x, tnode._child[ i ]._coord._y );
+	    best = -val;
+	}
+    }
+
+    return best;
+}
+
+function aiMinimax( nodes, ix, iy, id )
+{
+    var root = new TreeNode();
+    var depth = 3;
+    var result = new Coord2D();
+
+    result.set( -1, -1 );
+    root._elm = nodes;
+
+    doMinimax( root, id, depth, id, result );
+
+    if( cannotSet( nodes, result._x, result._y, id ) ){
+	console.debug( "err:" + result._x + "-" + result._y );
+    }
+
+    setNode( nodes, result._x, result._y, id );
+}
+
+
