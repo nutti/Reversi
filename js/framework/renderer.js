@@ -41,7 +41,9 @@ function init( id )
 
     canvas.addEventListener( 'click', onMouseClicked );
 //    setAlgorithm( aiMaxEval );
-    setAlgorithm( aiMinimax );
+//    setAlgorithm( aiMinimax );
+    setAlgorithm( aiNegamax );
+//    setMyAlgorithm( aiMaxEval );
     setMyAlgorithm( randomByNone );
 //    setMyAlgorithm( inputFromPlayer );
 

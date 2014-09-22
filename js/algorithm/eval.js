@@ -65,10 +65,97 @@ function aiMaxEval( nodes, ix, iy, id )
     return SET_NODE_SUCCEEDED;
 }
 
-function doMinimax( tnode, id, depth, firstID, result )
+function doMinimax( tnode, id, depth, firstID, result, firstDepth )
 {
     if( depth == 0 ){
-	return evalState( tnode._elm );
+	var v;
+	v = evalState( tnode._elm, id );
+//	console.debug( v );
+	return v;
+    }
+
+    tnode._child = new Array();
+
+    for( var x = 0; x < MAX_X; ++x ){
+	for( var y = 0; y < MAX_Y; ++y ){
+	    if( !cannotSet( tnode._elm, x, y, id ) ){
+		var newChild = new TreeNode();
+		var copied = new Array();
+		var coord = new Coord2D();
+		copyNodes( tnode._elm, copied );
+		setNode( copied, x, y, id );
+		newChild._elm = copied;
+		coord.set( x, y );
+		newChild._coord = coord;
+		tnode._child.push( newChild );
+//		console.debug( "d" + depth + ",id" + id + "," + x + "-" + y );
+	    }
+	}
+    }
+
+    if( tnode._child.length == 0 ){
+	return evalState( tnode._elm, id );
+    }   
+ 
+    var max = -99999;
+    var min = 99999;
+    for( var i = 0; i < tnode._child.length; ++i ){
+	var nextID = ( id == NODE_ID_WHITE ) ? NODE_ID_BLACK : NODE_ID_WHITE;
+	var val = doMinimax( tnode._child[ i ], nextID, depth - 1, firstID, result, firstDepth );
+	if( id == firstID && max < val ){
+	    if( depth == firstDepth ){
+		result.set( tnode._child[ i ]._coord._x, tnode._child[ i ]._coord._y );
+//		console.debug( "" + val + "," + result._x + "-" + result._y );
+	    }
+	    max = val;
+	}
+	if( id != firstID && min > val ){
+	    if( depth == firstDepth ){
+		result.set( tnode._child[ i ]._coord._x, tnode._child[ i ]._coord._y );
+//	    	console.debug( "" + val + "," + result._x + "-" + result._y );
+	    }
+	    min = val;
+	}
+//	if( depth == 3 ){
+//	    console.debug( "" + val );
+//	}
+
+    }
+
+    if( id == firstID ){
+	return max;
+    }
+    return min;
+}
+
+function aiMinimax( nodes, ix, iy, id )
+{
+    var root = new TreeNode();
+    var depth = 2;
+    var result = new Coord2D();
+    var ret;
+
+    result.set( -1, -1 );
+    root._elm = nodes;
+
+    doMinimax( root, id, depth, id, result, depth );
+  //  console.debug( "result:" + result._x + "-" + result._y + "@" + id )    
+
+    ret = cannotSet( nodes, result._x, result._y, id )
+    if( ret ){
+//	console.debug( "err:" + result._x + "-" + result._y + "@" + id );
+	return ret;
+    }
+
+    setNode( nodes, result._x, result._y, id );
+
+    return SET_NODE_SUCCEEDED;
+}
+
+function doNegamax( tnode, id, depth, firstID, result, firstDepth )
+{
+    if( depth == 0 ){
+	return evalState( tnode._elm, id );
     }
 
     tnode._child = new Array();
@@ -88,40 +175,69 @@ function doMinimax( tnode, id, depth, firstID, result )
 	    }
 	}
     }
-    
-    var best = -99999;
+ 
+    var max = -99999;
     for( var i = 0; i < tnode._child.length; ++i ){
 	var nextID = ( id == NODE_ID_WHITE ) ? NODE_ID_BLACK : NODE_ID_WHITE;
-	var val = doMinimax( tnode._child[ i ], nextID, depth - 1, firstID, result );
-	if( id == firstID && best < val ){
-	    result.set( tnode._child[ i ]._coord._x, tnode._child[ i ]._coord._y );
-	    best = val;
-	}
-	if( id != firstID && best < -val ){
-	    result.set( tnode._child[ i ]._coord._x, tnode._child[ i ]._coord._y );
-	    best = -val;
+	var val = -doNegamax( tnode._child[ i ], nextID, depth - 1, firstID, result, firstDepth );
+	if( max < val ){
+	    if( depth == firstDepth ){
+		result.set( tnode._child[ i ]._coord._x, tnode._child[ i ]._coord._y );
+	    	console.debug( "" + val + "," + result._x + "-" + result._y );
+	    }
+	    max = val;
 	}
     }
 
-    return best;
+
+    return max;
 }
 
-function aiMinimax( nodes, ix, iy, id )
+function aiNegamax( nodes, ix, iy, id )
 {
     var root = new TreeNode();
-    var depth = 3;
+    var depth = 4;
     var result = new Coord2D();
+    var ret;
 
     result.set( -1, -1 );
     root._elm = nodes;
 
-    doMinimax( root, id, depth, id, result );
-
-    if( cannotSet( nodes, result._x, result._y, id ) ){
-	console.debug( "err:" + result._x + "-" + result._y );
+    doNegamax( root, id, depth, id, result, depth );
+    console.debug( "result:" + result._x + "-" + result._y + "@" + id );
+    ret = cannotSet( nodes, result._x, result._y, id )
+    if( ret ){
+	return ret;
     }
 
-    setNode( nodes, result._x, result._y, id );
+    setNode( nodes, result._x, result._y, id );    
+
+    return SET_NODE_SUCCEEDED;
 }
 
+function doAlphaBeta( tnode, id, depth, alpha, beta, result )
+{
+}
 
+function aiAlphaBeta( nodes, ix, iy, id )
+{
+    var root = new TreeNode();
+    var depth = 4;
+    var result = new Coord2D();
+    var ret;
+
+    result.set( -1, -1 );
+    root._elm = nodes;
+
+    doAlphaBeta( root, id, depth, INT_L_LIMIT, INT_U_LIMIT );
+    //doNegamax( root, id, depth, id, result, depth );
+    //console.debug( "result:" + result._x + "-" + result._y + "@" + id );
+    ret = cannotSet( nodes, result._x, result._y, id )
+    if( ret ){
+	return ret;
+    }
+
+    setNode( nodes, result._x, result._y, id );    
+
+    return SET_NODE_SUCCEEDED;
+}
